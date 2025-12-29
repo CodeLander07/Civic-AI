@@ -70,6 +70,7 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -85,12 +86,17 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || isLoading) return;
+    if ((!message.trim() && !selectedImage) || isLoading) return;
+
+    // Create user message
+    const userContent = selectedImage 
+      ? `📷 **Image uploaded:** ${selectedImage.name}${message.trim() ? `\n\n**Question:** ${message}` : ''}`
+      : message;
 
     const newMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      content: message,
+      content: userContent,
       timestamp: new Date()
     };
 
@@ -105,16 +111,36 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
     setIsLoading(true);
 
     try {
-      // Call the real API
-      const response = await api.post("/api/query", {
-        question: message,
-        language: selectedLanguage.split(" ")[0].toLowerCase() // Extract language code
-      });
+      let response;
+
+      if (selectedImage) {
+        // Handle image upload with OCR
+        const formData = new FormData();
+        formData.append('file', selectedImage);
+        formData.append('language', selectedLanguage.split(" ")[0].toLowerCase());
+
+        response = await api.post("/api/ocr", formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        // Clear selected image after successful upload
+        setSelectedImage(null);
+      } else {
+        // Handle text query
+        response = await api.post("/api/query", {
+          question: message,
+          language: selectedLanguage.split(" ")[0].toLowerCase()
+        });
+      }
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: response.data.answer || "I apologize, but I couldn't process your request at the moment. Please try again.",
+        content: selectedImage 
+          ? response.data.ai_explanation || "I couldn't process the image. Please try again."
+          : response.data.answer || "I apologize, but I couldn't process your request at the moment. Please try again.",
         timestamp: new Date()
       };
 
@@ -124,13 +150,21 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
           : chat
       ));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("API Error:", error);
+      
+      let errorMessage = "I'm sorry, I'm having trouble connecting to the server right now. Please check your connection and try again.";
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data.detail || "Please check your input and try again.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Your session has expired. Please log in again.";
+      }
       
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: "I'm sorry, I'm having trouble connecting to the server right now. Please check your connection and try again.",
+        content: errorMessage,
         timestamp: new Date()
       };
 
@@ -139,9 +173,20 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
           ? { ...chat, messages: [...chat.messages, errorResponse], lastUpdated: new Date() }
           : chat
       ));
+
+      // Clear selected image on error
+      setSelectedImage(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleImageUpload = (file: File) => {
+    setSelectedImage(file);
+  };
+
+  const handleClearImage = () => {
+    setSelectedImage(null);
   };
 
   const handleNewChat = () => {
@@ -154,16 +199,7 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
 
     setChats(prev => [newChat, ...prev]);
     setActiveChat(newChat.id);
-  };
-
-  const handleVoiceInput = () => {
-    // Voice input functionality would be implemented here
-    alert("Voice input feature will be implemented with speech recognition API");
-  };
-
-  const handleFileUpload = () => {
-    // File upload functionality would be implemented here
-    alert("Document upload feature will be implemented with file processing API");
+    setSelectedImage(null); // Clear any selected image
   };
 
   return (
@@ -230,11 +266,12 @@ The Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a central government scheme 
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSendMessage}
-            onVoiceInput={handleVoiceInput}
-            onFileUpload={handleFileUpload}
+            onImageUpload={handleImageUpload}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
             disabled={isLoading}
+            selectedImage={selectedImage}
+            onClearImage={handleClearImage}
           />
         </div>
       </div>
