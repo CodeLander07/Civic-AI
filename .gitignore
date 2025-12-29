@@ -1,0 +1,28 @@
+# -------- Node / Next.js --------
+node_modules/
+.next/
+out/
+dist/
+.env
+.env.local
+.env.production
+
+# -------- Python --------
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+
+# -------- OS --------
+.DS_Store
+Thumbs.db
+
+# -------- IDE --------
+.vscode/
+.idea/
+
+# -------- Logs --------
+*.log
