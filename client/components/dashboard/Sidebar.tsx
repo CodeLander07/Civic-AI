@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 interface Chat {
   id: string;
   title: string;
@@ -51,6 +53,8 @@ export default function Sidebar({
   selectedLanguage,
   onLanguageChange
 }: SidebarProps) {
+  const { logout } = useAuth();
+
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -144,7 +148,10 @@ export default function Sidebar({
         </div>
 
         {/* Logout */}
-        <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1">
+        <button
+          onClick={logout}
+          className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1"
+        >
           <span className="flex items-center">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

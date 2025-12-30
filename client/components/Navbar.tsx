@@ -37,9 +37,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="flex items-center space-x-2">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-              Civic-AI
+              Civic AI
             </h1>
           </Link>
           

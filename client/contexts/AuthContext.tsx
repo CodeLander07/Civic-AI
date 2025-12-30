@@ -1,7 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import api from '@/lib/axios';
+import { supabase } from '@/lib/supabaseClient';
+import { AxiosError } from 'axios';
 
 interface User {
   id: string;
@@ -41,6 +43,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user && !!token;
 
+  const verifyUserToken = async (authToken: string) => {
+    const response = await api.get('/auth/me', {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return response.data;
+  };
+
   // Initialize auth state from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
@@ -53,13 +62,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(JSON.parse(storedUser));
           
           // Verify token is still valid
-          await checkAuth();
+          const userData = await verifyUserToken(storedToken);
+          setUser(userData);
+          localStorage.setItem('civic_ai_user', JSON.stringify(userData));
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         // Clear invalid data
         localStorage.removeItem('civic_ai_token');
         localStorage.removeItem('civic_ai_user');
+        setToken(null);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -117,16 +130,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('civic_ai_user', JSON.stringify(userData));
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       
       let errorMessage = 'Login failed. Please try again.';
       
-      if (error.response?.status === 401) {
-        errorMessage = 'Invalid email or password.';
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.message) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401) {
+          errorMessage = 'Invalid email or password.';
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
 
@@ -155,18 +172,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('civic_ai_user', JSON.stringify(userData));
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error);
       
       let errorMessage = 'Account creation failed. Please try again.';
       
-      if (error.response?.status === 400) {
-        if (error.response.data?.detail?.includes('already registered')) {
-          errorMessage = 'Email already registered. Please use a different email or try logging in.';
-        } else if (error.response.data?.detail) {
-          errorMessage = error.response.data.detail;
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          if (error.response.data?.detail?.includes('already registered')) {
+            errorMessage = 'Email already registered. Please use a different email or try logging in.';
+          } else if (error.response.data?.detail) {
+            errorMessage = error.response.data.detail;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
         }
-      } else if (error.message) {
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
 
@@ -176,24 +197,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+
     setUser(null);
     setToken(null);
     localStorage.removeItem('civic_ai_token');
     localStorage.removeItem('civic_ai_user');
     
-    // Redirect to home page
-    window.location.href = '/';
+    // Redirect to login page
+    window.location.href = '/login';
   };
 
-  const checkAuth = async (): Promise<void> => {
+  const checkAuth = useCallback(async (): Promise<void> => {
     try {
       if (!token) {
         throw new Error('No token available');
       }
 
-      const response = await api.get('/auth/me');
-      const userData = response.data;
+      const userData = await verifyUserToken(token);
 
       // Update user data
       setUser(userData);
@@ -207,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('civic_ai_user');
       throw error;
     }
-  };
+  }, [token]);
 
   const value: AuthContextType = {
     user,

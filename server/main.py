@@ -23,7 +23,7 @@ app = FastAPI(title="Civic-AI Backend", version="1.0.0")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000",os.getenv("CORS_ORIGIN", "")],
+    allow_origins=[os.getenv("CORS_ORIGIN", "")],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -51,15 +51,18 @@ if supabase_service_role_key:
 else:
     logger.warning("SUPABASE_SERVICE_ROLE_KEY not set. Admin operations may fail due to RLS.")
 
-# Initialize OpenAI (optional - for better AI responses)
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_client = None
-if openai_api_key:
+# Initialize Google Gemini
+import google.generativeai as genai
+
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if gemini_api_key:
     try:
-        from openai import OpenAI
-        openai_client = OpenAI(api_key=openai_api_key)
-    except ImportError:
-        logger.warning("OpenAI package not installed. Using fallback responses.")
+        genai.configure(api_key=gemini_api_key)
+        logger.info("Google Gemini initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Google Gemini: {e}")
+else:
+    logger.warning("GEMINI_API_KEY not set. AI features will use fallback responses.")
 
 # Security
 security = HTTPBearer()
@@ -140,11 +143,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # AI Helper Functions
 def generate_ai_response(text: str, language: str = "en") -> str:
     """
-    Generate AI response for government/legal text
+    Generate AI response for government/legal text using Google Gemini
     """
     try:
-        if openai_client:
-            # Use OpenAI for better responses
+        if gemini_api_key:
+            # Use Gemini for responses
+            model = genai.GenerativeModel('gemini-pro')
+            
             prompt = f"""
             You are Civic-AI, an AI assistant that helps citizens understand government schemes, legal notices, and public services in India.
             
@@ -163,16 +168,10 @@ def generate_ai_response(text: str, language: str = "en") -> str:
             - Respond in {language} if possible, otherwise in English
             """
             
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-                temperature=0.7
-            )
-            
-            return response.choices[0].message.content.strip()
+            response = model.generate_content(prompt)
+            return response.text
         else:
-            # Fallback response without OpenAI
+            # Fallback response without Gemini
             return generate_fallback_response(text, language)
     
     except Exception as e:
@@ -181,7 +180,7 @@ def generate_ai_response(text: str, language: str = "en") -> str:
 
 def generate_fallback_response(text: str, language: str = "en") -> str:
     """
-    Generate a fallback response when OpenAI is not available
+    Generate a fallback response when Gemini is not available
     """
     return f"""# Document Analysis
 
