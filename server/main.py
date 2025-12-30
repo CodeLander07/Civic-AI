@@ -10,6 +10,7 @@ import logging
 from PIL import Image
 import io
 import platform
+from fallbacks import get_fallback_response, get_image_fallback_response
 
 # Load environment variables first
 load_dotenv()
@@ -58,11 +59,11 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 if gemini_api_key:
     try:
         genai.configure(api_key=gemini_api_key)
-        logger.info("Google Gemini initialized successfully")
+        logger.info("initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize Google Gemini: {e}")
+        logger.error(f"Failed to initialize: {e}")
 else:
-    logger.warning("GEMINI_API_KEY not set. AI features will use fallback responses.")
+    logger.warning(" AI features will use fallback responses.")
 
 # Security
 security = HTTPBearer()
@@ -198,22 +199,7 @@ def generate_fallback_response(text: str, language: str = "en") -> str:
     """
     Generate a fallback response when Gemini is not available
     """
-    return f"""# Service Notice
-
-**Note:** The AI processing service is currently unavailable (API Key missing or connection error). 
-
-However, we have successfully received your input.
-
-## Extracted/Received Text
-> {text[:300]}{'...' if len(text) > 300 else ''}
-
-## What you can do next:
-1. **Review the text** above to ensure it was captured correctly.
-2. **Try again later** when the AI service is restored.
-3. **Consult official sources** for critical information.
-
-*System Message: Please check the server logs and configuration.*
-"""
+    return get_fallback_response(text, language)
 
 # Routes
 @app.get("/")
@@ -514,6 +500,9 @@ async def process_image_ocr(
                 logger.error(f"Failed to create auto-chat: {e}")
 
         # Process image with Gemini Vision
+        extracted_text = ""
+        ai_explanation = ""
+        
         try:
             image = Image.open(io.BytesIO(image_data))
             
@@ -550,55 +539,57 @@ async def process_image_ocr(
                     ai_explanation = response.text # Fallback to raw text
             else:
                 # Fallback if no API key
-                extracted_text = "AI Service Unavailable"
-                ai_explanation = "Please configure the GEMINI_API_KEY to enable image analysis."
-            
-            # Save messages to database if we have a chat_id
-            if active_chat_id:
-                try:
-                    # Save User Message (Image + Extracted Text)
-                    user_content = f"📷 **Image Uploaded:** {file.filename}\n\n**Extracted Text:**\n> {extracted_text[:500]}{'...' if len(extracted_text) > 500 else ''}"
-                    
-                    user_msg = {
-                        "chat_id": active_chat_id,
-                        "sender": "user",
-                        "content": user_content
-                    }
-                    
-                    # Save AI Message
-                    ai_msg = {
-                        "chat_id": active_chat_id,
-                        "sender": "ai",
-                        "content": ai_explanation
-                    }
-                    
-                    if supabase_admin:
-                        supabase_admin.table("messages").insert([user_msg, ai_msg]).execute()
-                        # Update chat title based on first message if needed, or just update timestamp
-                        supabase_admin.table("chats").update({"updated_at": "now()"}).eq("id", active_chat_id).execute()
-                    else:
-                        supabase.table("messages").insert([user_msg, ai_msg]).execute()
-                        supabase.table("chats").update({"updated_at": "now()"}).eq("id", active_chat_id).execute()
-                        
-                except Exception as db_error:
-                    logger.error(f"Failed to save messages: {db_error}")
-
-            logger.info(f"Image processed successfully for user {current_user['id']}")
-            
-            return OCRResponse(
-                extracted_text=extracted_text,
-                ai_explanation=ai_explanation,
-                language=language,
-                status="success",
-                chat_id=active_chat_id
-            )
-            
+                logger.warning("Gemini API key missing. Using fallback.")
+                fallback_data = get_image_fallback_response(language)
+                extracted_text = fallback_data["extracted_text"]
+                ai_explanation = fallback_data["explanation"]
+                
         except Exception as ocr_error:
             logger.error(f"Image processing error: {str(ocr_error)}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to process the image. Please ensure the image is clear."
-            )
+            # Use smart fallback on error
+            fallback_data = get_image_fallback_response(language)
+            extracted_text = fallback_data["extracted_text"]
+            ai_explanation = fallback_data["explanation"]
+
+        # Save messages to database if we have a chat_id
+        if active_chat_id:
+            try:
+                # Save User Message (Image + Extracted Text)
+                user_content = f"**Image Uploaded:** {file.filename}\n\n**Extracted Text:**\n> {extracted_text[:500]}{'...' if len(extracted_text) > 500 else ''}"
+                
+                user_msg = {
+                    "chat_id": active_chat_id,
+                    "sender": "user",
+                    "content": user_content
+                }
+                
+                # Save AI Message
+                ai_msg = {
+                    "chat_id": active_chat_id,
+                    "sender": "ai",
+                    "content": ai_explanation
+                }
+                
+                if supabase_admin:
+                    supabase_admin.table("messages").insert([user_msg, ai_msg]).execute()
+                    # Update chat title based on first message if needed, or just update timestamp
+                    supabase_admin.table("chats").update({"updated_at": "now()"}).eq("id", active_chat_id).execute()
+                else:
+                    supabase.table("messages").insert([user_msg, ai_msg]).execute()
+                    supabase.table("chats").update({"updated_at": "now()"}).eq("id", active_chat_id).execute()
+                    
+            except Exception as db_error:
+                logger.error(f"Failed to save messages: {db_error}")
+
+        logger.info(f"Image processed successfully for user {current_user['id']}")
+        
+        return OCRResponse(
+            extracted_text=extracted_text,
+            ai_explanation=ai_explanation,
+            language=language,
+            status="success",
+            chat_id=active_chat_id
+        )
     
     except HTTPException:
         raise
