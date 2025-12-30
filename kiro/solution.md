@@ -1,25 +1,33 @@
-# The Solution: AI-Powered Civic Assistance
+# The Solution: Civic-AI
 
-## 💡 Our Approach
-Civic-AI acts as a personal civic assistant, using Generative AI to interpret, simplify, and explain government interactions.
+## 💡 The Core Concept
+Civic-AI is a "Translator for Bureaucracy." It sits between the citizen and the state, decoding the complex signals from the government into clear, actionable messages for the user.
 
-## 🛠 Core Capabilities
+## 🛠 Key Components
 
-### 1. Document Analysis (OCR + AI)
-- **Input**: Users upload an image or PDF of a document.
-- **Process**: 
-    - OCR (Tesseract) extracts the text.
-    - LLM (OpenAI/Gemini) analyzes the content.
-- **Output**: A simplified summary, key dates, and required actions.
+### 1. The "Simplifier" Engine (GenAI)
+At the heart of the system is a fine-tuned prompt chain running on **Google Gemini 1.5 Flash**.
+- **Input:** Complex text (from OCR or user query).
+- **Processing:** The AI identifies legal terms, dates, and obligations. It then rewrites the content using simple analogies and local idioms.
+- **Output:** A summary that a 10-year-old could understand.
 
-### 2. Interactive Chatbot
-- Users can ask follow-up questions about the analyzed document or general queries about schemes.
-- The bot maintains context and provides answers in the user's preferred language.
+### 2. Visual Intelligence (OCR)
+We don't expect users to type out long notices.
+- **Action:** Users snap a photo of a letter or form.
+- **Tech:** The system uses OCR to extract text, even from grainy or low-light images, before passing it to the Simplifier.
 
-### 3. Scheme Discovery
-- Personalized recommendations for government schemes based on user profile (age, income, location).
+### 3. The "Offline First" Fallback
+We recognize that AI services can go down or be slow.
+- **Mechanism:** A robust fallback system (implemented in `server/fallbacks.py`) contains pre-indexed data on major schemes (PM Kisan, Ayushman Bharat, etc.).
+- **Benefit:** If the AI is unreachable, the user still gets accurate, structured information from our local database.
 
-## 🌈 Benefits
-- **Clarity**: Turns "legalese" into plain language.
-- **Speed**: Instant analysis instead of waiting for appointments.
-- **Empowerment**: Users can make informed decisions without relying on others.
+### 4. Multilingual Interface
+The entire application is designed to be language-agnostic.
+- **UI:** Labels and buttons can be localized.
+- **Content:** All AI responses are generated in the user's selected language (Hindi, Marathi, Tamil, etc.).
+
+## 🌈 User Journey
+1. **Snap:** User takes a photo of a confusing notice.
+2. **Select:** User chooses their language (e.g., "Hindi").
+3. **Understand:** App says: "This is a tax notice. You need to pay ₹500 by next Monday. Here is the link."
+4. **Act:** User clicks the link and completes the task.

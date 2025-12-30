@@ -1,15 +1,20 @@
-# The Problem: Bureaucratic Complexity
+# The Problem: The Civic Disconnect
 
-## 🛑 The Challenge
-Government documents, legal notices, and scheme details are often written in complex, technical language (legalese) that is difficult for the average citizen to understand. This complexity creates a significant barrier to access.
+## 1. The Language Barrier
+India is a land of many languages, but its bureaucracy often speaks only one: English (or complex formal Hindi).
+- **Fact:** Less than 10% of the Indian population speaks English fluently.
+- **Impact:** Millions of citizens cannot read the notices they receive or the forms they need to fill out.
 
-## 📉 Key Pain Points
-1.  **Language Barrier**: Many official documents are in English or formal Hindi, which may not be the user's primary language or dialect.
-2.  **Information Overload**: Citizens are overwhelmed by dense text and unclear instructions.
-3.  **Fear of Non-Compliance**: The fear of misunderstanding a legal notice often leads to anxiety and inaction.
-4.  **Lack of Accessibility**: Information is often scattered across multiple websites, making it hard to find a single source of truth.
+## 2. The Complexity Trap
+Even for those who read the language, government documents are written in "legalese"—dense, jargon-filled text that is difficult to parse.
+- **Example:** A simple land notice might reference multiple sections of an act without explaining what they mean for the landowner.
+- **Impact:** Fear, anxiety, and missed deadlines.
 
-## 🔍 Impact
-- Eligible citizens miss out on welfare schemes.
-- Legal notices are ignored or misunderstood, leading to penalties.
-- Increased dependency on middlemen and agents, often leading to exploitation.
+## 3. The Middleman Dependency
+Because the system is opaque, citizens are forced to rely on "agents" or middlemen to navigate it.
+- **Risk:** This creates a breeding ground for misinformation, exploitation, and bribery.
+- **Cost:** Citizens pay for services that should be free or low-cost.
+
+## 4. Information Fragmentation
+Information about schemes (like PM Kisan, Ayushman Bharat) is scattered across hundreds of websites.
+- **Result:** Eligible citizens often don't know what benefits they are entitled to.

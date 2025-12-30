@@ -49,3 +49,21 @@ Pin `httpx` to a compatible range that satisfies all dependencies.
 
 **Implementation:**
 - Updated `server/requirements.txt` to specify `httpx>=0.27.0,<0.28.0`.
+
+## 2025-12-31: Architecture
+
+### 5. Reversion to Monolithic Backend
+**Context:**
+We attempted to refactor `server/main.py` into a modular structure (`api/`, `services/`, `models/`) to improve maintainability. However, this introduced complexity and potential breakage during the critical hackathon phase.
+
+**Decision:**
+Revert to a monolithic `main.py` structure.
+
+**Reasoning:**
+- **Velocity:** A single file is easier to debug and modify quickly during a hackathon.
+- **Simplicity:** Reduces import errors and circular dependencies.
+- **Focus:** Allows the team to focus on features (Fallbacks, AI prompts) rather than architectural purity.
+
+**Implementation:**
+- Restored `server/main.py` as the single source of truth.
+- Kept `server/fallbacks.py` as a separate module for data isolation.

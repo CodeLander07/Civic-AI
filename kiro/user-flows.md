@@ -1,21 +1,32 @@
 # User Flows
 
-## 1. User Onboarding
-1.  **Landing Page**: User visits the site and sees the value proposition.
-2.  **Signup**: User enters email/password.
-    *   *Backend Action*: Creates user in Supabase, auto-confirms email (Hackathon mode), logs user in.
-3.  **Dashboard**: User is redirected to the main dashboard.
+## 1. New User Onboarding
+1. **Landing Page**: User sees "Simplify Government" value prop.
+2. **Signup**: User enters Email/Password.
+3. **Auto-Login**: System auto-confirms email (Hackathon mode) and logs user in.
+4. **Dashboard**: User lands on the main dashboard.
 
-## 2. Document Analysis
-1.  **Upload**: User clicks "Analyze Document" and uploads an image.
-2.  **Processing**:
-    *   Frontend sends image to Backend.
-    *   Backend performs OCR to extract text.
-    *   Backend sends text to AI for simplification.
-3.  **Result**: User sees the extracted text and a simplified summary side-by-side.
-4.  **Chat**: User can ask follow-up questions about the document.
+## 2. Document Simplification (The "Happy Path")
+1. **Upload**: User clicks "Upload Document" and selects an image (e.g., a tax notice).
+2. **Preview**: User sees the image preview.
+3. **Send**: User clicks "Analyze".
+4. **Processing**:
+   - Client sends image to Server.
+   - Server runs OCR + Gemini.
+5. **Result**: User sees a simplified summary in the chat window.
+   - *Example Output*: "This is a property tax bill. You need to pay ₹1200 by Dec 31st."
 
-## 3. Scheme Search
-1.  **Query**: User types "schemes for farmers in Maharashtra".
-2.  **Search**: Backend queries the vector database (future scope) or uses AI to fetch relevant info.
-3.  **Results**: List of eligible schemes with application links is displayed.
+## 3. Scheme Query (Text Chat)
+1. **Input**: User types "How do I apply for PM Kisan?" in Hindi ("PM Kisan ke liye kaise apply karun?").
+2. **Processing**:
+   - Server detects language.
+   - Server queries Gemini (or Fallback DB if offline).
+3. **Response**: User receives a step-by-step guide in Hindi.
+
+## 4. Offline Fallback
+1. **Scenario**: Gemini API is down or rate-limited.
+2. **Input**: User asks about "Ayushman Bharat".
+3. **Detection**: Server catches the API error.
+4. **Fallback**: Server looks up "Ayushman Bharat" in `fallbacks.py`.
+5. **Response**: User gets the pre-cached static information.
+

@@ -1,18 +1,11 @@
-# Civic-AI: Bridging the Gap Between Citizens and Government
+# Civic-AI: Your Personal Government Expert 🇮🇳
 
-**Civic-AI** is an intelligent platform designed to simplify complex government schemes, legal notices, and public services for the average citizen. By leveraging advanced AI and OCR technology, we transform bureaucratic jargon into clear, actionable insights.
+**Tagline:** Demystifying Bureaucracy for Every Indian Citizen.
 
-## 🚀 The Vision
-To empower every citizen with the knowledge and tools they need to navigate the civic landscape confidently, ensuring that no one is left behind due to language barriers or complexity.
+**Elevator Pitch:**
+Civic-AI is an intelligent, multilingual assistant that bridges the gap between complex government systems and the citizens they serve. By combining advanced AI with OCR technology, we transform dense legal notices, confusing forms, and intricate schemes into simple, actionable advice in your local language. No more middlemen, no more confusion—just clear, direct access to your rights and benefits.
 
-## 🌟 Key Features
-- **Instant Document Simplification**: Upload any government notice or form, and get a simple explanation in seconds.
-- **Multilingual Support**: Break down language barriers with support for local Indian languages.
-- **Smart Chat Assistant**: Ask questions about schemes and laws in plain language.
-- **Secure & Private**: Your data is handled with the utmost security and privacy.
-
-## 🎯 Target Audience
-- Citizens struggling with legal/government documents.
-- Non-native English speakers.
-- Elderly citizens needing assistance with digital services.
-- Social workers helping communities access benefits.
+**Key Value Proposition:**
+- **Simplify:** Turn "legalese" into plain language.
+- **Localize:** Speak to the government in your mother tongue.
+- **Empower:** Take control of your civic life without depending on agents.
